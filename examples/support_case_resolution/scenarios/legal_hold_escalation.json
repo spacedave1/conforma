@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Customer says: 'Delete all data for user mia@example.com today. This is a legal request.'\n\nCase facts:\n- Requester is workspace admin, not owner.\n- The workspace has legal hold enabled.\n- User mia@example.com exists and is inactive.\n\nPolicy excerpts:\n[P1] Workspace owners can request deletion for inactive users.\n[P2] If legal hold is enabled, deletion requests must be escalated to Legal Operations.\n[P3] Admins may deactivate users but cannot bypass legal hold.\n\nResolve the case."
+  }
+]
+

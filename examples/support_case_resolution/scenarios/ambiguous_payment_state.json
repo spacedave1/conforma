@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Customer says: 'I paid for Premium yesterday but the app still shows Free. Turn on Premium now.'\n\nCase facts:\n- Billing event B-918 says card authorization succeeded.\n- Subscription table still shows plan=Free.\n- Invoice I-551 is marked pending_settlement.\n- Entitlement sync last ran before B-918.\n- The pending state started 3 hours ago.\n\nPolicy excerpts:\n[P1] Premium access starts when invoice status is paid.\n[P2] If payment is authorized but pending settlement, ask the customer to wait or escalate to billing if the pending state exceeds 24 hours.\n[P3] Agents must not manually grant Premium unless invoice status is paid or billing approves an override.\n\nResolve the case."
+  }
+]
+

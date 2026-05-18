@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Customer says: 'Your system sent 4 duplicate invoices and charged us four times. Refund three charges.'\n\nCase facts:\n- Invoice table has one invoice: INV-771 for $240.\n- Payment processor has one successful charge: CH-882 for $240.\n- Email delivery log has four delivered invoice emails for INV-771 due to a notification retry bug.\n- No duplicate charge ids exist.\n\nPolicy excerpts:\n[P1] Duplicate notification emails are acknowledged as a communication defect but do not authorize refunds.\n[P2] Duplicate charges are refunded after processor logs confirm multiple successful charges for the same invoice.\n[P3] If financial logs contradict the customer claim, explain the verified records and offer to escalate if they can provide bank-statement evidence.\n\nResolve the case."
+  }
+]
+

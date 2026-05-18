@@ -1,0 +1,12 @@
+models_to_test:
+  - name: gpt-4o-mini
+    platform: openai
+    model: gpt-4o-mini
+  - name: gemini-2.5-flash
+    platform: gemini
+    model: gemini-2.5-flash
+judge_model:
+  platform: gemini
+  model: gemini-2.5-flash
+runs_per_sample: 1
+judge_runs_per_output: 1

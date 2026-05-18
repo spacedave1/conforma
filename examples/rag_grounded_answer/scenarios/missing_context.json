@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Question: What is the exact maximum archive size for importing a workspace backup on Enterprise?\n\nRetrieved context:\n[S1] Import guide: Workspace backups can be imported from the admin console.\n[S2] Troubleshooting guide: If an import fails, check that the archive is a valid zip file and retry.\n[S3] Admin roles guide: Only owners can import workspace backups.\n[S4] Enterprise onboarding checklist: Large imports should be scheduled during off-peak hours.\n[S5] Error reference: BACKUP_TOO_LARGE means the archive exceeds the configured workspace import limit.\n\nAnswer with the exact maximum archive size and cite the source."
+  }
+]
+

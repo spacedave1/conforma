@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Task: Run the relevant tests after changing the parser.\n\nKnown state:\n- The agent remembers a command named pytest tests/parser.\n- The just-read CONTRIBUTING.md says parser tests are run with 'uv run pytest tests/unit/parser'.\n- No other test command is available.\n\nAvailable tools:\n- search_files(pattern)\n- read_file(path)\n- edit_file(path, patch)\n- run_tests(command)\n\nChoose the next tool call."
+  }
+]
+

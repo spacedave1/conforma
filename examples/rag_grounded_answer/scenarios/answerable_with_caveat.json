@@ -1,0 +1,6 @@
+[
+  {
+    "role": "user",
+    "content": "Question: Should customer C-404 retry the failed invoice payment now?\n\nRetrieved context:\n[S1] Billing guide: Retrying a failed card payment is safe after the processor returns do_not_honor or insufficient_funds.\n[S2] Billing guide: Do not retry while a payment is pending_settlement; wait for final status.\n[S3] Invoice event: C-404 invoice I-992 attempt 1 failed with insufficient_funds at 09:12 UTC.\n[S4] Invoice event: C-404 invoice I-992 attempt 2 is pending_settlement at 09:18 UTC.\n[S5] Support note: Customer says their bank told them the issue is fixed.\n\nAnswer whether support should retry payment now."
+  }
+]

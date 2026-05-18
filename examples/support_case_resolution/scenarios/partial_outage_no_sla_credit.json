@@ -1,0 +1,6 @@
+[
+  {
+    "role": "user",
+    "content": "Customer says: 'We could not upload files for 2 hours. Apply the SLA credit.'\n\nCase facts:\n- Customer is on Enterprise annual.\n- Incident INC-515 affected file uploads for 127 minutes.\n- Dashboard, API reads, and billing APIs remained available.\n- The customer's workspace had 18 failed upload attempts during the incident.\n\nPolicy excerpts:\n[P1] SLA credit applies when the core API is unavailable for more than 60 minutes in a month.\n[P2] Feature-specific degradation does not qualify for SLA credit unless the contract addendum names the affected feature.\n[P3] Enterprise customers may receive courtesy credits for severe feature degradation, but credits require account-manager approval.\n[P4] Agents must not call a courtesy credit an SLA credit.\n\nResolve the case."
+  }
+]

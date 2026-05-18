@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["answered", "insufficient_context", "conflicting_context"]
+    },
+    "answer": {"type": "string"},
+    "citations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "unsupported_claims": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "required": ["status", "answer", "citations", "unsupported_claims"],
+  "additionalProperties": false
+}
+

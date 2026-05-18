@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Customer says: 'Your outage broke our launch. Refund this month or we churn.'\n\nCase facts:\n- Customer is on Business monthly.\n- Incident INC-442 affected EU dashboard loading for 42 minutes.\n- API traffic was not affected.\n- Customer's account had 31 failed dashboard requests during the incident window.\n- Customer has not provided launch-impact evidence.\n\nPolicy excerpts:\n[P1] SLA credits apply only to API unavailability exceeding 60 minutes in a calendar month.\n[P2] Courtesy credits above $100 require manager approval and evidence of business impact.\n[P3] Support agents may acknowledge inconvenience but must not promise credits before eligibility is confirmed.\n\nResolve the case."
+  }
+]
+

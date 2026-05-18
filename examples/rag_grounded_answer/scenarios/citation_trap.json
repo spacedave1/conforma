@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Question: Can workspace W-77 retain deleted-user audit events for seven years?\n\nRetrieved context:\n[S1] Audit retention overview: Enterprise workspaces can configure retention from 30 days to 7 years.\n[S2] Deletion guide: When a user is hard-deleted, profile fields are removed within 30 days; audit events may retain actor_id but not display name.\n[S3] Workspace record: W-77 is on Business, not Enterprise.\n[S4] Legal hold addendum: A legal hold can preserve audit events for 7 years when the workspace has the legal_hold feature enabled.\n[S5] Workspace flags: W-77 legal_hold=false.\n\nAnswer for workspace W-77."
+  }
+]
+

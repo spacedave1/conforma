@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "tool": {
+      "type": "string",
+      "enum": ["search_files", "read_file", "edit_file", "run_tests"]
+    },
+    "arguments": {"type": "object"},
+    "rationale": {"type": "string"}
+  },
+  "required": ["tool", "arguments", "rationale"],
+  "additionalProperties": false
+}
+

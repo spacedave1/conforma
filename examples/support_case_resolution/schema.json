@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "case_status": {
+      "type": "string",
+      "enum": ["resolved", "needs_customer_info", "escalate"]
+    },
+    "customer_reply": {"type": "string"},
+    "verified_facts": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "policy_basis": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "internal_next_action": {"type": "string"}
+  },
+  "required": ["case_status", "customer_reply", "verified_facts", "policy_basis", "internal_next_action"],
+  "additionalProperties": false
+}
+

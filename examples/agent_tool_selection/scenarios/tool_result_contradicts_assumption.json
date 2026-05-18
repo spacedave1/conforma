@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Task: Update the authentication middleware.\n\nKnown state:\n- The agent assumed the middleware lives in src/auth/middleware.py.\n- search_files('middleware') just returned src/security/request_middleware.py and no src/auth/middleware.py.\n- The user has not asked for an edit yet; they asked to identify the right file first.\n\nAvailable tools:\n- search_files(pattern)\n- read_file(path)\n- edit_file(path, patch)\n- run_tests(command)\n\nChoose the next tool call."
+  }
+]
+

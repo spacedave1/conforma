@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Task: Fix the typo in the public error message in src/billing/errors.py.\n\nKnown state:\n- The exact file path is known.\n- The intended user-visible message is not known.\n- No file contents have been read in this session.\n\nAvailable tools:\n- search_files(pattern)\n- read_file(path)\n- edit_file(path, patch)\n- run_tests(command)\n\nChoose the next tool call."
+  }
+]
+

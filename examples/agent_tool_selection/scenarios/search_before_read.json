@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Task: Explain where retry behavior is implemented.\n\nKnown state:\n- The repository is unfamiliar.\n- The phrase 'retry behavior' appears in an issue title, not a known file path.\n- No file has been opened yet.\n\nAvailable tools:\n- search_files(pattern)\n- read_file(path)\n- edit_file(path, patch)\n- run_tests(command)\n\nChoose the next tool call."
+  }
+]
+

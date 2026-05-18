@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Question: Can ACME Labs use SAML SSO on Starter?\n\nRetrieved context:\n[S1] Security features page, updated 2025-11-20: SAML SSO is available on Business and Enterprise plans.\n[S2] Migration notice, updated 2026-01-08: This notice supersedes older plan tables. From 2026-02-01, SAML SSO is available on Starter only for education tenants.\n[S3] Tenant record: ACME Labs is a commercial tenant on Starter.\n[S4] Support macro, updated 2026-03-02: If a customer asks about SAML, recommend upgrading to Business. This macro does not override plan entitlements.\n\nAnswer for ACME Labs."
+  }
+]
+

@@ -1,0 +1,7 @@
+[
+  {
+    "role": "user",
+    "content": "Question: Does the Pro plan include audit-log CSV export for account A-193?\n\nRetrieved context:\n[S1] Pricing page, updated 2026-03-01: Pro includes API access, team seats, and basic audit-event viewing. CSV export is listed under Enterprise.\n[S2] Help-center article, updated 2026-02-14: Pro customers can view audit events in the dashboard. Export requires Enterprise.\n[S3] Sales FAQ, updated 2026-04-10: Pro includes audit-log CSV export for accounts created after 2026-04-01.\n[S4] Account record: A-193 is on Pro and was created on 2026-03-20.\n[S5] Changelog, updated 2026-04-15: The Sales FAQ entry about Pro CSV export was published early and applies only after backend rollout flag audit_csv_pro=true.\n[S6] Account flags: A-193 audit_csv_pro=false.\n\nAnswer the question for account A-193."
+  }
+]
+
