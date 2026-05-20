@@ -35,7 +35,7 @@ async def run_eval(target_folder: str) -> int:
     runs_per_sample = int(config.get("runs_per_sample", 1))
     judge_runs_per_output = int(config.get("judge_runs_per_output", 3))
 
-    judge_llm = llm_provider(model=judge_cfg["model"], platform=judge_cfg["platform"])
+    judge_llm = llm_provider(model=judge_cfg["model"], platform=judge_cfg["platform"], **_provider_kwargs(judge_cfg))
     resolved_judge_model = getattr(judge_llm, "model", None) or judge_cfg["model"]
 
     print(f"Target: {folder}")
@@ -47,7 +47,7 @@ async def run_eval(target_folder: str) -> int:
 
     for model_cfg in models:
         name = model_cfg["name"]
-        target_llm = llm_provider(model=model_cfg["model"], platform=model_cfg["platform"])
+        target_llm = llm_provider(model=model_cfg["model"], platform=model_cfg["platform"], **_provider_kwargs(model_cfg))
         resolved_model = getattr(target_llm, "model", None) or name
         print(f"=== Model: {name}  ({resolved_model}) ===")
         for sample, sample_id in zip(target["samples"], sample_ids):
@@ -164,6 +164,14 @@ def _refresh_chart(folder: Path) -> None:
         print(f"Chart refresh skipped: {type(e).__name__}: {e}")
 
 
+def _provider_kwargs(config: dict) -> dict:
+    return {
+        key: value
+        for key, value in config.items()
+        if key not in {"name", "platform", "model"}
+    }
+
+
 def main() -> int:
     if len(sys.argv) < 2:
         print("Usage: python -m conforma.run <target-folder>", file=sys.stderr)
@@ -173,4 +181,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -27,8 +27,8 @@ def test_load_target_requires_prompt_md() -> None:
         "outdated_policy",
     ]
     assert [model["name"] for model in target["config"]["models_to_test"]] == [
-        "gpt-4o-mini",
-        "gemini-2.5-flash",
+        "gpt-5-mini",
+        "gemini-3.1-flash-lite-preview",
     ]
 
 

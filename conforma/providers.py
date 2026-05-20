@@ -3,16 +3,20 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+from pathlib import Path
 from typing import Any
 
 
-def llm_provider(model: str, platform: str):
+def llm_provider(model: str, platform: str, **kwargs: Any):
+    _load_dotenv()
     if platform == "fake":
         return FakeProvider(model)
     if platform == "openai":
-        return OpenAIProvider(model)
+        return OpenAIProvider(model, **kwargs)
     if platform == "gemini":
-        return GeminiProvider(model)
+        return GeminiProvider(model, **kwargs)
+    if platform == "lm_studio":
+        return LMStudioProvider(model, **kwargs)
     raise ValueError(f"unknown platform: {platform}")
 
 
@@ -48,14 +52,19 @@ class FakeProvider:
 
 
 class OpenAIProvider:
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, **kwargs: Any) -> None:
         try:
             from openai import OpenAI
         except ImportError as exc:
             raise ImportError("Install OpenAI support with `pip install 'conforma[openai]'`.") from exc
 
         self.model = model
-        self._client = OpenAI()
+        client_kwargs = {
+            key: kwargs[key]
+            for key in ("api_key", "base_url", "timeout")
+            if key in kwargs
+        }
+        self._client = OpenAI(**client_kwargs)
 
     async def chat_completion(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
         return await asyncio.to_thread(
@@ -90,14 +99,21 @@ class OpenAIProvider:
 
 
 class GeminiProvider:
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, **kwargs: Any) -> None:
         try:
             from google import genai
         except ImportError as exc:
             raise ImportError("Install Gemini support with `pip install 'conforma[gemini]'`.") from exc
 
+        aliases = {"fast": "GEMINI_FAST", "medium": "GEMINI_MEDIUM", "strong": "GEMINI_STRONG"}
+        if model in aliases:
+            env_key = aliases[model]
+            model = os.environ.get(env_key, "")
+            if not model:
+                raise RuntimeError(f"{env_key} is not set")
+
         self.model = model
-        self._client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+        self._client = genai.Client(api_key=kwargs.get("api_key") or os.environ.get("GEMINI_API_KEY"))
 
     async def chat_completion(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
         response = await asyncio.to_thread(
@@ -184,3 +200,25 @@ def _schema_for_gemini(schema: Any) -> Any:
         return [_schema_for_gemini(item) for item in schema]
     return schema
 
+
+class LMStudioProvider(OpenAIProvider):
+    def __init__(self, model: str, **kwargs: Any) -> None:
+        base_url = str(kwargs.pop("base_url", "") or os.environ.get("LM_STUDIO_BASE_URL", "")).strip()
+        if not base_url:
+            raise RuntimeError("lm_studio requires LM_STUDIO_BASE_URL or config base_url")
+        kwargs["base_url"] = base_url.rstrip("/")
+        kwargs.setdefault("api_key", os.environ.get("LM_STUDIO_TOKEN") or "lm-studio")
+        super().__init__(model, **kwargs)
+
+
+def _load_dotenv() -> None:
+    for candidate in (Path.cwd() / ".env", Path.cwd().parent / ".env"):
+        if not candidate.exists():
+            continue
+        for raw_line in candidate.read_text().splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+        return
