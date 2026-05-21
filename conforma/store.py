@@ -49,6 +49,15 @@ CREATE TABLE IF NOT EXISTS runs (
     FOREIGN KEY(spec_id)   REFERENCES specs(id),
     FOREIGN KEY(sample_id) REFERENCES samples(id)
 );
+CREATE TABLE IF NOT EXISTS run_stats (
+    run_id INTEGER PRIMARY KEY,
+    stats_json TEXT,
+    tokens_per_second REAL,
+    total_output_tokens INTEGER,
+    input_tokens INTEGER,
+    time_to_first_token_seconds REAL,
+    FOREIGN KEY(run_id) REFERENCES runs(id)
+);
 CREATE TABLE IF NOT EXISTS judge_runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     run_id INTEGER,
@@ -148,4 +157,3 @@ def _git_sha() -> str | None:
     except Exception:
         pass
     return None
-

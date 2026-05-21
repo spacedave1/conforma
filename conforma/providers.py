@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +19,8 @@ def llm_provider(model: str, platform: str, **kwargs: Any):
         return GeminiProvider(model, **kwargs)
     if platform == "lm_studio":
         return LMStudioProvider(model, **kwargs)
+    if platform == "lm_studio_api":
+        return LMStudioAPIProvider(model, **kwargs)
     raise ValueError(f"unknown platform: {platform}")
 
 
@@ -67,12 +71,21 @@ class OpenAIProvider:
         self._client = OpenAI(**client_kwargs)
 
     async def chat_completion(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
-        return await asyncio.to_thread(
+        response = await asyncio.to_thread(
             self._client.chat.completions.create,
             model=self.model,
             messages=messages,
             temperature=0.0,
         )
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": response.choices[0].message.content or "",
+                    }
+                }
+            ]
+        }
 
     async def structured_completion(
         self,
@@ -185,6 +198,12 @@ def _parse_json_content(content: str) -> Any:
         if lines and lines[-1].startswith("```"):
             lines = lines[:-1]
         text = "\n".join(lines).strip()
+    json_start = min(
+        [idx for idx in (text.find("{"), text.find("[")) if idx >= 0],
+        default=-1,
+    )
+    if json_start > 0:
+        text = text[json_start:].strip()
     return json.loads(text)
 
 
@@ -206,9 +225,140 @@ class LMStudioProvider(OpenAIProvider):
         base_url = str(kwargs.pop("base_url", "") or os.environ.get("LM_STUDIO_BASE_URL", "")).strip()
         if not base_url:
             raise RuntimeError("lm_studio requires LM_STUDIO_BASE_URL or config base_url")
-        kwargs["base_url"] = base_url.rstrip("/")
+        base_url = base_url.rstrip("/")
+        if base_url.endswith("/v1"):
+            base_url = base_url[:-3].rstrip("/")
+        model = model or _loaded_lm_studio_chat_model(base_url)
+        kwargs["base_url"] = f"{base_url}/v1"
         kwargs.setdefault("api_key", os.environ.get("LM_STUDIO_TOKEN") or "lm-studio")
         super().__init__(model, **kwargs)
+
+
+class LMStudioAPIProvider:
+    def __init__(self, model: str, **kwargs: Any) -> None:
+        self.model = model
+        self.last_stats: dict[str, Any] | None = None
+        base_url = str(kwargs.pop("base_url", "") or os.environ.get("LM_STUDIO_BASE_URL", "")).strip()
+        if not base_url:
+            raise RuntimeError("lm_studio_api requires LM_STUDIO_BASE_URL or config base_url")
+        base_url = base_url.rstrip("/")
+        if base_url.endswith("/v1"):
+            base_url = base_url[:-3].rstrip("/")
+        self.model = model or _loaded_lm_studio_chat_model(base_url)
+        self._chat_url = f"{base_url}/api/v1/chat"
+        self._api_key = str(kwargs.pop("api_key", "") or os.environ.get("LM_STUDIO_TOKEN", "")).strip()
+
+    async def chat_completion(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
+        payload = self._payload_for_messages(messages)
+        data = await asyncio.to_thread(self._post_chat, payload)
+        self.last_stats = data.get("stats") if isinstance(data.get("stats"), dict) else None
+        content = _lm_studio_api_content(data)
+        return {"choices": [{"message": {"content": str(content)}}]}
+
+    async def structured_completion(
+        self,
+        messages: list[dict[str, Any]],
+        response_schema: dict[str, Any],
+        temperature: float = 0.0,
+    ) -> dict[str, Any]:
+        schema_instruction = (
+            "Return only a JSON value that conforms to this JSON Schema. "
+            "Do not include markdown fences, prose, explanations, or comments.\n\n"
+            f"JSON Schema:\n{json.dumps(response_schema, indent=2)}"
+        )
+        payload = self._payload_for_messages([
+            *messages,
+            {"role": "system", "content": schema_instruction},
+        ])
+        data = await asyncio.to_thread(self._post_chat, payload)
+        self.last_stats = data.get("stats") if isinstance(data.get("stats"), dict) else None
+        content = _lm_studio_api_content(data)
+        return {"data": _parse_json_content(content)}
+
+    def _payload_for_messages(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
+        system_prompt = "\n\n".join(
+            str(message.get("content", ""))
+            for message in messages
+            if message.get("role") == "system"
+        )
+        input_text = "\n\n".join(
+            str(message.get("content", ""))
+            for message in messages
+            if message.get("role") != "system"
+        )
+        return {
+            "model": self.model,
+            "system_prompt": system_prompt,
+            "input": input_text,
+        }
+
+    def _post_chat(self, payload: dict[str, Any]) -> dict[str, Any]:
+        body = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(
+            self._chat_url,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        if self._api_key:
+            request.add_header("Authorization", f"Bearer {self._api_key}")
+        try:
+            with urllib.request.urlopen(request, timeout=300) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"LM Studio API request failed: HTTP {exc.code}: {detail}") from exc
+
+
+def _lm_studio_api_content(data: dict[str, Any]) -> str:
+    output = data.get("output")
+    if isinstance(output, list):
+        messages = [
+            str(item.get("content") or "")
+            for item in output
+            if isinstance(item, dict) and item.get("type") == "message"
+        ]
+        content = "\n".join(message for message in messages if message.strip()).strip()
+        if content:
+            return content
+    if isinstance(output, str) and output.strip():
+        return output
+    for key in ("content", "response"):
+        value = data.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+    message = data.get("message")
+    if isinstance(message, dict):
+        value = message.get("content")
+        if isinstance(value, str) and value.strip():
+            return value
+    raise RuntimeError(f"LM Studio API response did not contain message content: {data!r}")
+
+
+def _loaded_lm_studio_chat_model(base_url: str) -> str:
+    request = urllib.request.Request(f"{base_url.rstrip('/')}/api/v0/models")
+    token = os.environ.get("LM_STUDIO_TOKEN", "").strip()
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"LM Studio model detection failed at {base_url}/api/v0/models: {exc}") from exc
+
+    loaded_chat_models = [
+        item.get("id")
+        for item in data.get("data", [])
+        if item.get("state") == "loaded"
+        and item.get("type") in {"llm", "vlm"}
+        and item.get("id")
+    ]
+    if not loaded_chat_models:
+        raise RuntimeError(
+            "lm_studio model is empty, but LM Studio has no loaded chat model. "
+            "Load a local LLM in LM Studio or set model explicitly."
+        )
+    return str(loaded_chat_models[0])
 
 
 def _load_dotenv() -> None:
