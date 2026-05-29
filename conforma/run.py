@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import argparse
 import json
 import sqlite3
 import sys
@@ -14,13 +15,21 @@ from conforma.store import init_db, now_iso, persist_inputs, persist_samples
 from conforma.validation import validate_structural
 
 
-async def run_eval(target_folder: str) -> int:
+async def run_eval(target_folder: str, scenario: str | None = None) -> int:
     folder = Path(target_folder)
     if not folder.is_dir():
         print(f"ERROR: target folder not found: {folder}", file=sys.stderr)
         return 2
 
     target = load_target(folder)
+    if scenario:
+        target["samples"] = [
+            sample for sample in target["samples"]
+            if sample.get("label") == scenario
+        ]
+        if not target["samples"]:
+            print(f"ERROR: scenario not found: {scenario}", file=sys.stderr)
+            return 2
     if not target["samples"]:
         print(f"No scenarios in {folder/'scenarios'}/. Drop json files (each = list of messages) there first.")
         return 0
@@ -43,6 +52,8 @@ async def run_eval(target_folder: str) -> int:
     print(f"Target: {folder}", flush=True)
     print(f"  prompt: {target['prompt_yaml_path']} key={target['prompt_yaml_key']}", flush=True)
     print(f"  samples: {len(target['samples'])}", flush=True)
+    if scenario:
+        print(f"  scenario: {scenario}", flush=True)
     print(f"  models to test: {[m['name'] for m in models]}", flush=True)
     print(f"  judge: {judge_cfg}", flush=True)
     print(flush=True)
@@ -290,10 +301,18 @@ def _provider_kwargs(config: dict) -> dict:
 
 
 def main() -> int:
-    if len(sys.argv) < 2:
-        print("Usage: python -m conforma.run <target-folder>", file=sys.stderr)
-        return 2
-    return asyncio.run(run_eval(sys.argv[1]))
+    parser = argparse.ArgumentParser(
+        prog="python -m conforma.run",
+        description="Run a Conforma prompt-contract target.",
+    )
+    parser.add_argument("target_folder")
+    parser.add_argument(
+        "-s",
+        "--scenario",
+        help="Run only the scenario with this filename stem.",
+    )
+    args = parser.parse_args()
+    return asyncio.run(run_eval(args.target_folder, scenario=args.scenario))
 
 
 if __name__ == "__main__":

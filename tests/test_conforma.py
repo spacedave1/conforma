@@ -58,6 +58,40 @@ judge_runs_per_output: 1
     assert (target_dir / "chart.png").exists()
 
 
+@pytest.mark.asyncio
+async def test_run_eval_filters_to_one_scenario(tmp_path) -> None:
+    target_dir = tmp_path / "rag_grounded_answer"
+    shutil.copytree(ROOT / "examples" / "rag_grounded_answer", target_dir)
+    (target_dir / "config.yaml").write_text(
+        """models_to_test:
+  - name: fake
+    platform: fake
+    model: fake
+judge_model:
+  platform: fake
+  model: fake-judge
+runs_per_sample: 1
+judge_runs_per_output: 0
+"""
+    )
+
+    result = await run_eval(str(target_dir), scenario="citation_trap")
+
+    assert result == 0
+    con = sqlite3.connect(target_dir / "log.db")
+    labels = [
+        row[0]
+        for row in con.execute(
+            "SELECT label FROM samples ORDER BY id"
+        )
+    ]
+    run_count = con.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+    con.close()
+
+    assert labels == ["citation_trap"]
+    assert run_count == 1
+
+
 def test_chart_series_groups_by_model_and_invocation(tmp_path) -> None:
     db = tmp_path / "log.db"
     con = sqlite3.connect(db)

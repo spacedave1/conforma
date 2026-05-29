@@ -114,6 +114,13 @@ pip install "conforma[chart]"
 conforma examples/rag_grounded_answer
 ```
 
+To debug one case without running the full scenario set, filter by scenario
+filename stem:
+
+```bash
+conforma examples/rag_grounded_answer --scenario citation_trap
+```
+
 Each run writes into the contract folder:
 
 - `log.db`: full SQLite run log,
