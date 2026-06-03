@@ -1,4 +1,3 @@
-import json
 import shutil
 import sqlite3
 from pathlib import Path
@@ -8,7 +7,6 @@ import pytest
 from conforma.chart import load_series
 from conforma.loader import load_target
 from conforma.run import run_eval
-from conforma.providers import _schema_for_gemini
 
 
 ROOT = Path(__file__).parents[1]
@@ -121,23 +119,3 @@ def test_chart_series_groups_by_model_and_invocation(tmp_path) -> None:
 
     assert [point[1] for point in series["model-a"]] == [50.0, 80.0]
     assert [point[1] for point in series["model-b"]] == [30.0]
-
-
-def test_gemini_schema_removes_unsupported_keywords() -> None:
-    schema = {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "answer": {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {"text": {"type": "string"}},
-            }
-        },
-    }
-
-    gemini_schema = _schema_for_gemini(schema)
-
-    assert "$schema" not in gemini_schema
-    assert "additionalProperties" not in json.dumps(gemini_schema)

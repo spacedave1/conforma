@@ -79,34 +79,26 @@ Examples:
 
 ```yaml
 models_to_test:
-  - name: gpt-5-mini
-    platform: openai
-    model: gpt-5-mini
-  - name: gemini-3.1-flash-lite-preview
-    platform: gemini
-    model: gemini-3.1-flash-lite-preview
+  - name: fake
+    platform: fake
+    model: fake
 
 judge_model:
-  platform: gemini
-  model: gemini-3.1-flash-lite-preview
+  platform: fake
+  model: fake-judge
 
 runs_per_sample: 1
 judge_runs_per_output: 1
 ```
 
-Supported platforms:
+Built-in platform:
 
 - `fake` for local smoke tests,
-- `openai` with `OPENAI_API_KEY`,
-- `gemini` with `GEMINI_API_KEY`.
 
-Install optional provider dependencies:
+Real provider objects belong in the calling application. Use `run_eval(..., provider_factory=...)`
+from a small wrapper that imports both Conforma and that application's provider factory.
 
-```bash
-pip install "conforma[openai]"
-pip install "conforma[gemini]"
-pip install "conforma[chart]"
-```
+Install optional chart dependencies with `pip install "conforma[chart]"`.
 
 ## Run
 
@@ -142,4 +134,4 @@ Bundled examples:
 
 ## License
 
-MIT License. Copyright (c) 2026 David Grimm.
+MIT License.

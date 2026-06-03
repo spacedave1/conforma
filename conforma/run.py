@@ -15,7 +15,7 @@ from conforma.store import init_db, now_iso, persist_inputs, persist_samples
 from conforma.validation import validate_structural
 
 
-async def run_eval(target_folder: str, scenario: str | None = None) -> int:
+async def run_eval(target_folder: str, scenario: str | None = None, provider_factory=None) -> int:
     folder = Path(target_folder)
     if not folder.is_dir():
         print(f"ERROR: target folder not found: {folder}", file=sys.stderr)
@@ -46,7 +46,8 @@ async def run_eval(target_folder: str, scenario: str | None = None) -> int:
     judge_timeout_seconds = float(config.get("judge_timeout_seconds", 120))
     target_timeout_seconds = float(config.get("target_timeout_seconds", 120))
 
-    judge_llm = llm_provider(model=judge_cfg["model"], platform=judge_cfg["platform"], **_provider_kwargs(judge_cfg))
+    make_provider = provider_factory or llm_provider
+    judge_llm = make_provider(model=judge_cfg["model"], platform=judge_cfg["platform"], **_provider_kwargs(judge_cfg))
     resolved_judge_model = getattr(judge_llm, "model", None) or judge_cfg["model"]
 
     print(f"Target: {folder}", flush=True)
@@ -62,7 +63,7 @@ async def run_eval(target_folder: str, scenario: str | None = None) -> int:
     db_lock = asyncio.Lock()
     for model_cfg in models:
         name = model_cfg["name"]
-        target_llm = llm_provider(model=model_cfg["model"], platform=model_cfg["platform"], **_provider_kwargs(model_cfg))
+        target_llm = make_provider(model=model_cfg["model"], platform=model_cfg["platform"], **_provider_kwargs(model_cfg))
         resolved_model = getattr(target_llm, "model", None) or name
         print(f"=== Model: {name}  ({resolved_model}) ===", flush=True)
         for sample, sample_id in zip(target["samples"], sample_ids):
