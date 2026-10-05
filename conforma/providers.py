@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from typing import Any
 
 
 def llm_provider(model: str, platform: str, **_: Any):
-    _load_dotenv()
     if platform == "fake":
         return FakeProvider(model)
     raise RuntimeError(
@@ -67,16 +64,3 @@ def _fake_output_for_schema(schema: dict[str, Any]) -> Any:
         else:
             output[key] = "fake response"
     return output
-
-
-def _load_dotenv() -> None:
-    for candidate in (Path.cwd() / ".env", Path.cwd().parent / ".env"):
-        if not candidate.exists():
-            continue
-        for raw_line in candidate.read_text().splitlines():
-            line = raw_line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
-        return

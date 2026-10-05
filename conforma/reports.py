@@ -117,3 +117,14 @@ def write_summary(con: sqlite3.Connection, folder: Path, prompt_id: int, schema_
             existing = []
     existing.extend(new_entries)
     summary_path.write_text(json.dumps(existing, indent=2))
+
+
+def print_judge_result(judge_index: int, jres: dict) -> None:
+    """Print a judge score, rule counts, and a brief rationale."""
+    rat = jres.get("rationale", "").replace("\n", " ")
+    if len(rat) > 140:
+        rat = rat[:137] + "..."
+    checks = jres.get("rule_checks", []) or []
+    n_pass = sum(1 for c in checks if c.get("verdict") == "pass")
+    n_fail = sum(1 for c in checks if c.get("verdict") == "fail")
+    print(f"    judge {judge_index}: overall={jres['overall']} ({n_pass} pass, {n_fail} fail)  {rat}")

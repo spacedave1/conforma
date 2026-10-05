@@ -7,10 +7,11 @@ import sqlite3
 import sys
 from pathlib import Path
 
+from conforma.chart import refresh_chart
 from conforma.judge import judge_output
 from conforma.loader import load_target
 from conforma.providers import llm_provider
-from conforma.reports import write_outputs, write_summary
+from conforma.reports import print_judge_result, write_outputs, write_summary
 from conforma.store import init_db, now_iso, persist_inputs, persist_samples
 from conforma.validation import validate_structural
 
@@ -56,7 +57,7 @@ async def run_eval(target_folder: str, scenario: str | None = None, provider_fac
     if scenario:
         print(f"  scenario: {scenario}", flush=True)
     print(f"  models to test: {[m['name'] for m in models]}", flush=True)
-    print(f"  judge: {judge_cfg}", flush=True)
+    print(f"  judge: platform={judge_cfg['platform']} model={judge_cfg['model']}", flush=True)
     print(flush=True)
 
     judge_tasks: list[asyncio.Task[None]] = []
@@ -95,7 +96,7 @@ async def run_eval(target_folder: str, scenario: str | None = None, provider_fac
     write_summary(con, folder, prompt_id, schema_id, spec_id)
     write_outputs(con, folder, prompt_id)
     con.close()
-    _refresh_chart(folder)
+    refresh_chart(folder)
 
     print(f"\nDone. Run log: {folder/'log.db'}  Summary: {folder/'summaries.json'}", flush=True)
     return 0
@@ -233,17 +234,7 @@ async def _run_judge(
         )
         con.commit()
     print(f"    [{label}] ", end="")
-    _print_judge_result(judge_index, jres)
-
-
-def _print_judge_result(judge_index: int, jres: dict) -> None:
-    rat = jres.get("rationale", "").replace("\n", " ")
-    if len(rat) > 140:
-        rat = rat[:137] + "..."
-    checks = jres.get("rule_checks", []) or []
-    n_pass = sum(1 for c in checks if c.get("verdict") == "pass")
-    n_fail = sum(1 for c in checks if c.get("verdict") == "fail")
-    print(f"    judge {judge_index}: overall={jres['overall']} ({n_pass} pass, {n_fail} fail)  {rat}")
+    print_judge_result(judge_index, jres)
 
 
 def _optional_float(value) -> float | None:
@@ -278,19 +269,6 @@ def _stats_suffix(stats) -> str:
     if ttft is not None:
         parts.append(f"{ttft:.2f}s ttft")
     return f" ({', '.join(parts)})" if parts else ""
-
-
-def _refresh_chart(folder: Path) -> None:
-    try:
-        from conforma.chart import load_series, render
-
-        chart_out = folder / "chart.png"
-        series = load_series(folder / "log.db")
-        render(series, chart_out)
-        n_points = sum(len(v) for v in series.values())
-        print(f"Chart: {chart_out} ({len(series)} curves, {n_points} points)")
-    except Exception as e:
-        print(f"Chart refresh skipped: {type(e).__name__}: {e}")
 
 
 def _provider_kwargs(config: dict) -> dict:

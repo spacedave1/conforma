@@ -26,3 +26,4 @@ conforma = "conforma.run:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["verifies(requirement_id): links a safety check to its documented requirement"]

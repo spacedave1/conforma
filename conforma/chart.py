@@ -72,6 +72,18 @@ def render(series, out_path: Path) -> None:
     plt.close(fig)
 
 
+def refresh_chart(folder: Path) -> None:
+    """Refresh the history chart and report an unavailable chart dependency."""
+    try:
+        chart_out = folder / "chart.png"
+        series = load_series(folder / "log.db")
+        render(series, chart_out)
+        n_points = sum(len(v) for v in series.values())
+        print(f"Chart: {chart_out} ({len(series)} curves, {n_points} points)")
+    except Exception as e:
+        print(f"Chart refresh skipped: {type(e).__name__}: {e}")
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("target_folder")

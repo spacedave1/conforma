@@ -11,6 +11,9 @@ __pycache__/
 .DS_Store
 
 .conforma-runs/
+outputs.md
+summaries.json
+chart.png
 *.db
 *.db-journal
 *.db-shm
